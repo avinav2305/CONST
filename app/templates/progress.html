@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% block title %}Progress — CONST{% endblock %}
+
+{% block content %}
+<section class="workout-section">
+
+    <div class="workout-header">
+        <p class="auth-eyebrow">Your Journey</p>
+        <h1 class="dash-title">PROGRESS<br><span>TRACKER</span></h1>
+    </div>
+
+    <!-- PROFILE SETUP -->
+    <div class="prog-block">
+        <p class="step-label">Your Stats</p>
+        <form method="POST" action="/progress" class="stats-form">
+            <input type="hidden" name="action" value="save_profile">
+            <div class="stats-grid">
+                <div class="form-group">
+                    <label>Height (cm)</label>
+                    <input type="number" name="height" step="0.1" placeholder="e.g. 175"
+                        value="{{ current_user.height or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Age</label>
+                    <input type="number" name="age" placeholder="e.g. 21"
+                        value="{{ current_user.age or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Starting Weight (kg)</label>
+                    <input type="number" name="start_weight" step="0.1" placeholder="e.g. 75"
+                        value="{{ current_user.start_weight or '' }}"
+                        {{ 'readonly' if current_user.start_weight }}>
+                </div>
+                <div class="form-group">
+                    <label>Goal Weight (kg)</label>
+                    <input type="number" name="goal_weight" step="0.1" placeholder="e.g. 68"
+                        value="{{ current_user.goal_weight or '' }}">
+                </div>
+            </div>
+            <button type="submit" class="btn-save">Save Stats →</button>
+        </form>
+    </div>
+
+    <!-- LOG WEIGHT -->
+    <div class="prog-block">
+        <p class="step-label">Log Today's Weight</p>
+        <form method="POST" action="/progress" class="log-form">
+            <input type="hidden" name="action" value="log_weight">
+            <div class="log-row">
+                <input type="number" name="weight" step="0.1" placeholder="Enter today's weight (kg)" required>
+                <button type="submit" class="btn-log">Log →</button>
+            </div>
+        </form>
+    </div>
+
+    {% if logs %}
+    <!-- SUMMARY CARDS -->
+    <div class="prog-block">
+        <p class="step-label">Summary</p>
+        <div class="summary-grid">
+            <div class="summary-card">
+                <span class="summary-label">Current Weight</span>
+                <span class="summary-val">{{ current_weight }} <small>kg</small></span>
+            </div>
+            {% if total_change is not none %}
+            <div class="summary-card {{ 'summary-card--good' if total_change < 0 else 'summary-card--up' }}">
+                <span class="summary-label">Total Change</span>
+                <span class="summary-val">{{ '+' if total_change > 0 else '' }}{{ total_change }} <small>kg</small></span>
+            </div>
+            {% endif %}
+            {% if remaining is not none %}
+            <div class="summary-card">
+                <span class="summary-label">To Goal</span>
+                <span class="summary-val">{{ remaining|abs }} <small>kg left</small></span>
+            </div>
+            {% endif %}
+            {% if bmi %}
+            <div class="summary-card summary-card--bmi">
+                <span class="summary-label">BMI</span>
+                <span class="summary-val {{ bmi_category[1] }}">{{ bmi }}</span>
+                <span class="bmi-cat">{{ bmi_category[0] }}</span>
+            </div>
+            {% endif %}
+            {% if streak %}
+            <div class="summary-card summary-card--streak">
+                <span class="summary-label">Logging Streak</span>
+                <span class="summary-val">{{ streak }} <small>days</small></span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- BMI BAR -->
+    {% if bmi %}
+    <div class="prog-block">
+        <p class="step-label">BMI Indicator</p>
+        <div class="bmi-bar-wrap">
+            <div class="bmi-bar">
+                <div class="bmi-zone bmi-zone--low">Underweight<br><small>&lt;18.5</small></div>
+                <div class="bmi-zone bmi-zone--normal">Normal<br><small>18.5–24.9</small></div>
+                <div class="bmi-zone bmi-zone--high">Overweight<br><small>25–29.9</small></div>
+                <div class="bmi-zone bmi-zone--very-high">Obese<br><small>30+</small></div>
+            </div>
+            {% set bmi_pct = [[(bmi - 15) / (40 - 15) * 100, 0]|max, 100]|min %}
+            <div class="bmi-marker" style="left: calc({{ bmi_pct }}% - 12px)">
+                <div class="bmi-marker-dot"></div>
+                <span>{{ bmi }}</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- PROGRESS BAR -->
+    {% if progress_pct is not none and current_user.start_weight and current_user.goal_weight %}
+    <div class="prog-block">
+        <p class="step-label">Journey Progress</p>
+        <div class="journey-bar-wrap">
+            <div class="journey-endpoints">
+                <span>Start: {{ current_user.start_weight }}kg</span>
+                <span>Goal: {{ current_user.goal_weight }}kg</span>
+            </div>
+            <div class="journey-bar">
+                <div class="journey-fill" style="width: {{ progress_pct }}%"></div>
+            </div>
+            <div class="journey-pct">{{ progress_pct }}% there
+                {% if eta_text %} · Est. goal: <strong>{{ eta_text }}</strong>{% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- INSIGHTS -->
+    {% if trend_text or insight_msg %}
+    <div class="prog-block">
+        <p class="step-label">Insights</p>
+        <div class="insights-grid">
+            {% if trend_text %}
+            <div class="insight-card insight-card--trend {{ trend_class }}">
+                <span class="insight-icon">
+                    {% if trend_class == 'trend-down' %}📉
+                    {% elif trend_class == 'trend-up' %}📈
+                    {% else %}➡️{% endif %}
+                </span>
+                <div>
+                    <h4>Weekly Trend</h4>
+                    <p>{{ trend_text }}</p>
+                </div>
+            </div>
+            {% endif %}
+            {% if insight_msg %}
+            <div class="insight-card insight-card--advice">
+                <span class="insight-icon">🧠</span>
+                <div>
+                    <h4>Smart Advice</h4>
+                    <p>{{ insight_msg }}</p>
+                </div>
+            </div>
+            {% endif %}
+            {% if streak >= 3 %}
+            <div class="insight-card insight-card--streak">
+                <span class="insight-icon">🔥</span>
+                <div>
+                    <h4>On a Roll</h4>
+                    <p>{{ streak }}-day logging streak. Consistency is everything.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- WEIGHT CHART -->
+    {% if chart_labels|length > 1 %}
+    <div class="prog-block">
+        <p class="step-label">Weight Chart</p>
+        <div class="chart-wrap">
+            <canvas id="weightChart"></canvas>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- HISTORY TABLE -->
+    {% if history_data %}
+    <div class="prog-block">
+        <p class="step-label">Weight History</p>
+        <table class="exercise-table">
+            <thead>
+                <tr><th>Date</th><th>Weight (kg)</th><th>Change</th></tr>
+            </thead>
+            <tbody>
+                {% for entry in history_data %}
+                <tr>
+                    <td>{{ entry.date }}</td>
+                    <td>{{ entry.weight }}</td>
+                    <td>
+                        {% if entry.diff is not none %}
+                            <span class="{{ 'diff-down' if entry.diff < 0 else 'diff-up' if entry.diff > 0 else '' }}">
+                                {{ '+' if entry.diff > 0 else '' }}{{ entry.diff }} kg
+                            </span>
+                        {% else %}
+                            <span class="muted">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <p>📊 Fill in your stats and log your first weight to get started.</p>
+    </div>
+    {% endif %}
+
+</section>
+
+{% if chart_labels|length > 1 %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('weightChart').getContext('2d');
+const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+gradient.addColorStop(0, 'rgba(232,255,71,0.3)');
+gradient.addColorStop(1, 'rgba(232,255,71,0)');
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ chart_labels | tojson }},
+        datasets: [{
+            label: 'Weight (kg)',
+            data: {{ chart_weights | tojson }},
+            borderColor: '#e8ff47',
+            backgroundColor: gradient,
+            borderWidth: 2.5,
+            pointBackgroundColor: '#e8ff47',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            fill: true,
+            tension: 0.4,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: '#161616',
+                borderColor: '#2a2a2a',
+                borderWidth: 1,
+                titleColor: '#e8ff47',
+                bodyColor: '#f0f0f0',
+                callbacks: { label: ctx => ` ${ctx.parsed.y} kg` }
+            }
+        },
+        scales: {
+            x: { grid: { color: '#1e1e1e' }, ticks: { color: '#888' } },
+            y: { grid: { color: '#1e1e1e' }, ticks: { color: '#888', callback: v => v + ' kg' } }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

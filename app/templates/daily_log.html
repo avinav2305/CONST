@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}Daily Log — CONST{% endblock %}
+
+{% block content %}
+<section class="workout-section">
+
+    <div class="workout-header">
+        <p class="auth-eyebrow">{{ today.strftime('%A, %d %B %Y') }}</p>
+        <h1 class="dash-title">DAILY<br><span>LOG</span></h1>
+    </div>
+
+    <!-- SPLIT PREFERENCE -->
+    {% if not current_user.split_pref %}
+    <div class="prog-block">
+        <p class="step-label">Set Your Split First</p>
+        <form method="POST" action="/daily-log">
+            <input type="hidden" name="action" value="save_split">
+            <div class="option-grid">
+                <label class="option-card split-radio">
+                    <input type="radio" name="split" value="bro" required>
+                    <span class="option-icon">💪</span>
+                    <h3>Bro Split</h3>
+                    <p>1 muscle group per day</p>
+                </label>
+                <label class="option-card split-radio">
+                    <input type="radio" name="split" value="ppl" required>
+                    <span class="option-icon">🔄</span>
+                    <h3>Push Pull Legs</h3>
+                    <p>PPL rotating split</p>
+                </label>
+            </div>
+            <button type="submit" class="btn-save" style="margin-top:1rem">Save Split →</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- TODAY'S WORKOUT FOCUS -->
+    {% if workout_focus %}
+    <div class="prog-block">
+        <p class="step-label">Today's Workout Focus</p>
+        {% if workout_focus.is_rest %}
+        <div class="rest-day-card">
+            <span style="font-size:3rem">😴</span>
+            <h3>Rest Day</h3>
+            <p>Recovery is part of the process. Sleep well, eat right, and come back stronger.</p>
+        </div>
+        {% else %}
+        <div class="focus-card">
+            <div class="focus-header">
+                <div>
+                    <span class="focus-badge">{{ current_user.split_pref|upper }} SPLIT</span>
+                    <h2 class="focus-title">{{ workout_focus.focus }}</h2>
+                </div>
+                <a href="/workout" class="btn-ghost">Full Plan →</a>
+            </div>
+            <table class="exercise-table" style="margin-top:1rem">
+                <thead>
+                    <tr><th>Exercise</th><th>Sets</th><th>Reps</th></tr>
+                </thead>
+                <tbody>
+                    {% for ex in workout_focus.exercises %}
+                    <tr>
+                        <td>{{ ex[0] }}</td>
+                        <td>{{ ex[1] }}</td>
+                        <td>{{ ex[2] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- END OF DAY FEEDBACK -->
+    <div class="prog-block">
+        <p class="step-label">{{ "Update Today's Log" if today_log else "End of Day Feedback" }}</p>
+        <form method="POST" action="/daily-log" class="feedback-form">
+            <input type="hidden" name="action" value="save_log">
+
+            <div class="form-group">
+                <label>How strong did you feel today?</label>
+                <div class="star-rating" id="starRating">
+                    {% for i in range(1, 6) %}
+                    <span class="star {{ 'star--filled' if today_log and today_log.strength_rating >= i else '' }}"
+                          data-val="{{ i }}" onclick="setRating({{ i }})">★</span>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="rating" id="ratingInput"
+                    value="{{ today_log.strength_rating if today_log else 0 }}">
+            </div>
+
+            <div class="form-group">
+                <label>Workout Completion</label>
+                <div class="completion-options">
+                    {% for val, label in [('full','✅ Full Workout'), ('partial','⚡ Partial'), ('rest','😴 Rest Day')] %}
+                    <label class="comp-option {{ 'comp-option--active' if today_log and today_log.completion == val else '' }}">
+                        <input type="radio" name="completion" value="{{ val }}"
+                            {{ 'checked' if today_log and today_log.completion == val else '' }} required>
+                        {{ label }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Note <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+                <textarea name="note" placeholder="How did training go? Any PRs? Feeling sore?" maxlength="300"
+                    rows="3">{{ today_log.note if today_log else '' }}</textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">Save Log →</button>
+        </form>
+    </div>
+
+    <!-- WEEKLY PATTERN -->
+    {% if week_logs %}
+    <div class="prog-block">
+        <p class="step-label">Last 7 Days</p>
+        <div class="week-grid">
+            {% for log in week_logs %}
+            <div class="week-card week-card--{{ log.completion }}">
+                <span class="week-date">{{ log.date.strftime('%a %d') }}</span>
+                <div class="week-stars">
+                    {% for i in range(1, 6) %}
+                    <span class="{{ 'star-sm--on' if log.strength_rating and log.strength_rating >= i else 'star-sm--off' }}">★</span>
+                    {% endfor %}
+                </div>
+                <span class="week-comp">{{ log.completion|title }}</span>
+                {% if log.note %}
+                <span class="week-note">{{ log.note[:60] }}{% if log.note|length > 60 %}…{% endif %}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- PATTERN INSIGHTS -->
+    {% if weakest_day or strongest_day or completion_rate is not none %}
+    <div class="prog-block">
+        <p class="step-label">Your Patterns (Last 30 Days)</p>
+        <div class="insights-grid">
+            {% if strongest_day %}
+            <div class="insight-card insight-card--streak">
+                <span class="insight-icon">💪</span>
+                <div>
+                    <h4>Strongest Day</h4>
+                    <p>You consistently feel best on <strong>{{ strongest_day }}</strong>. Schedule heavy lifts then.</p>
+                </div>
+            </div>
+            {% endif %}
+            {% if weakest_day and weakest_day != strongest_day %}
+            <div class="insight-card insight-card--advice">
+                <span class="insight-icon">😓</span>
+                <div>
+                    <h4>Weakest Day</h4>
+                    <p><strong>{{ weakest_day }}</strong> is your low-energy day. Schedule lighter sessions or rest.</p>
+                </div>
+            </div>
+            {% endif %}
+            {% if completion_rate is not none %}
+            <div class="insight-card insight-card--trend {{ 'trend-down' if completion_rate < 50 else 'trend-up' }}">
+                <span class="insight-icon">📊</span>
+                <div>
+                    <h4>Completion Rate</h4>
+                    <p>{{ completion_rate }}% of logged workouts completed fully.
+                        {% if completion_rate >= 80 %}Excellent consistency! 🔥
+                        {% elif completion_rate >= 50 %}Room to improve — push for 80%+.
+                        {% else %}Low completion. Try shorter sessions you can finish.{% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+</section>
+
+<script>
+function setRating(val) {
+    document.getElementById('ratingInput').value = val;
+    document.querySelectorAll('.star').forEach((s, i) => {
+        s.classList.toggle('star--filled', i < val);
+    });
+}
+
+// Completion option highlight
+document.querySelectorAll('.comp-option input').forEach(input => {
+    input.addEventListener('change', () => {
+        document.querySelectorAll('.comp-option').forEach(el => el.classList.remove('comp-option--active'));
+        input.parentElement.classList.add('comp-option--active');
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — CONST{% endblock %}
+
+{% block content %}
+<section class="dashboard">
+    <div class="dashboard-header">
+        <div>
+            <p class="auth-eyebrow">Your Space</p>
+            <h1 class="dash-title">WELCOME,<br><span>{{ user.name.upper() }}</span></h1>
+        </div>
+    </div>
+
+    <div class="dash-grid">
+        <div class="dash-card">
+            <div class="dash-card-icon">🏋️</div>
+            <h3>Workouts</h3>
+            <p>View and manage your personalized workout plans.</p>
+            <a href="/workout" class="dash-link">Explore →</a>
+        </div>
+        <div class="dash-card dash-card--accent">
+            <div class="dash-card-icon">🥗</div>
+            <h3>Diet Plan</h3>
+            <p>Check your meal suggestions based on your preferences.</p>
+            <a href="/diet" class="dash-link">Explore →</a>
+        </div>
+        <div class="dash-card">
+            <div class="dash-card-icon">📈</div>
+            <h3>Progress</h3>
+            <p>Log your weight and track your fitness journey.</p>
+            <a href="/progress" class="dash-link">Explore →</a>
+        </div>
+        <div class="dash-card">
+            <div class="dash-card-icon">📝</div>
+            <h3>Daily Log</h3>
+            <p>Today's workout focus, strength rating and feedback.</p>
+            <a href="/daily-log" class="dash-link">Explore →</a>
+        </div>
+        <div class="dash-card">
+            <div class="dash-card-icon">💬</div>
+            <h3>AI Chatbot</h3>
+            <p>Ask your fitness coach anything, anytime.</p>
+            <a href="/chatbot" class="dash-link">Chat Now →</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Register — CONST{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-card">
+        <div class="auth-header">
+            <p class="auth-eyebrow">Join CONST</p>
+            <h1 class="auth-title">CREATE<br><span>ACCOUNT</span></h1>
+        </div>
+
+        <form class="auth-form" method="POST" action="/register">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" placeholder="John Doe" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="you@gmail.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Min 8 chars, 1 uppercase, 1 number, 1 special" required>
+                <div class="password-strength" id="strength-bar">
+                    <div class="strength-fill" id="strength-fill"></div>
+                </div>
+                <p class="strength-label" id="strength-label"></p>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" placeholder="Repeat your password" required>
+            </div>
+
+            <button type="submit" class="btn-submit">Create Account →</button>
+        </form>
+
+        <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
+    </div>
+</section>
+{% endblock %}

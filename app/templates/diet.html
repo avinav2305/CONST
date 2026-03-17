@@ -1,0 +1,1095 @@
+{% extends "base.html" %}
+{% block title %}Diet Plan — CONST{% endblock %}
+
+{% block content %}
+<section class="workout-section">
+
+    <div class="workout-header">
+        <p class="auth-eyebrow">Nutrition Hub</p>
+        <h1 class="dash-title">DIET<br><span>PLANNER</span></h1>
+        <p class="workout-subtitle">Pick your diet type, goal, and meals per day to get your plan.</p>
+    </div>
+
+    <!-- STEP 1: DIET TYPE -->
+    <div class="step-block" id="step-diet">
+        <p class="step-label">Step 1 — Choose Your Diet Type</p>
+        <div class="option-grid">
+            <div class="option-card" data-diet="veg" onclick="selectDiet('veg')">
+                <span class="option-icon">🥦</span>
+                <h3>Vegetarian</h3>
+                <p>Plant-based meals with paneer, lentils, tofu, chickpeas, dairy and more.</p>
+            </div>
+            <div class="option-card" data-diet="nonveg" onclick="selectDiet('nonveg')">
+                <span class="option-icon">🥩</span>
+                <h3>Non-Vegetarian</h3>
+                <p>Includes chicken, fish, eggs, and all vegetarian options too.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 2: GOAL -->
+    <div class="step-block hidden" id="step-goal">
+        <p class="step-label">Step 2 — Choose Your Goal</p>
+        <div class="option-grid">
+            <div class="option-card" data-goal="bulk" onclick="selectGoal('bulk')">
+                <span class="option-icon">📈</span>
+                <h3>Bulk / Muscle Gain</h3>
+                <p>Caloric surplus. High protein, high carbs, moderate fats.</p>
+            </div>
+            <div class="option-card" data-goal="lean" onclick="selectGoal('lean')">
+                <span class="option-icon">🔥</span>
+                <h3>Lean / Cut</h3>
+                <p>Caloric deficit. High protein, lower carbs, healthy fats.</p>
+            </div>
+            <div class="option-card" data-goal="maintenance" onclick="selectGoal('maintenance')">
+                <span class="option-icon">⚖️</span>
+                <h3>Maintenance</h3>
+                <p>Balanced macros. Eat at maintenance calories, stay consistent.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 3: MEALS PER DAY -->
+    <div class="step-block hidden" id="step-meals">
+        <p class="step-label">Step 3 — Meals Per Day</p>
+        <div class="option-grid">
+            <div class="option-card" data-meals="3" onclick="selectMeals(3)">
+                <span class="option-icon">🍽️</span>
+                <h3>3 Meals</h3>
+                <p>Breakfast, Lunch, Dinner. Simple and easy to follow.</p>
+            </div>
+            <div class="option-card" data-meals="4" onclick="selectMeals(4)">
+                <span class="option-icon">🍱</span>
+                <h3>4 Meals</h3>
+                <p>Breakfast, Lunch, Evening Snack, Dinner.</p>
+            </div>
+            <div class="option-card" data-meals="5" onclick="selectMeals(5)">
+                <span class="option-icon">⚡</span>
+                <h3>5 Meals</h3>
+                <p>Breakfast, Mid-morning, Lunch, Evening Snack, Dinner.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 4: PLAN OUTPUT -->
+    <div class="step-block hidden" id="step-plan">
+        <p class="step-label">Step 4 — Your Meal Plan</p>
+        <div id="plan-output"></div>
+    </div>
+
+    <!-- NUTRIENTS TIP CARD -->
+    <div class="step-block hidden" id="step-tips">
+        <p class="step-label">Nutrition Tips</p>
+        <div id="tips-output"></div>
+    </div>
+
+</section>
+
+<script>
+// ── Data ─────────────────────────────────────────────────────────────────────
+
+const mealPlans = {
+    veg: {
+        bulk: {
+            3: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:00 – 8:00 AM',
+                    items: [
+                        { food: 'Oats with banana and peanut butter', portion: '1 cup oats + 1 banana + 2 tbsp PB' },
+                        { food: 'Whole milk', portion: '1 glass (250ml)' },
+                        { food: 'Boiled eggs (if you eat)', portion: '2 eggs', note: true },
+                    ],
+                    macros: { protein: '25–30g', carbs: '70–80g', fats: '15–20g' },
+                    tip: 'Eat within 30–45 min of waking up. This kickstarts your metabolism.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '1:00 – 2:00 PM',
+                    items: [
+                        { food: 'Brown rice or chapati', portion: '1.5 cups rice or 3 chapatis' },
+                        { food: 'Paneer curry or dal', portion: '150g paneer or 1 cup dal' },
+                        { food: 'Mixed vegetable sabzi', portion: '1 cup' },
+                        { food: 'Curd / Greek yogurt', portion: '1 cup' },
+                    ],
+                    macros: { protein: '30–35g', carbs: '80–90g', fats: '12–15g' },
+                    tip: 'This is your biggest meal. Don\'t skip carbs here — you need fuel.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '7:00 – 8:00 PM',
+                    items: [
+                        { food: 'Moong dal or rajma', portion: '1.5 cups cooked' },
+                        { food: 'Chapati or quinoa', portion: '2 chapatis or 1 cup quinoa' },
+                        { food: 'Sautéed vegetables', portion: '1 cup' },
+                        { food: 'Paneer / tofu', portion: '100g' },
+                    ],
+                    macros: { protein: '28–32g', carbs: '55–65g', fats: '10–12g' },
+                    tip: 'Eat dinner at least 2 hours before bed for better digestion.',
+                },
+            ],
+            4: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:00 – 8:00 AM',
+                    items: [
+                        { food: 'Oats with banana and peanut butter', portion: '1 cup oats + 1 banana + 2 tbsp PB' },
+                        { food: 'Whole milk', portion: '1 glass (250ml)' },
+                        { food: 'Boiled eggs (if you eat)', portion: '2 eggs', note: true },
+                    ],
+                    macros: { protein: '25–30g', carbs: '70–80g', fats: '15–20g' },
+                    tip: 'Eat within 30–45 min of waking up.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '1:00 – 2:00 PM',
+                    items: [
+                        { food: 'Brown rice', portion: '1.5 cups cooked' },
+                        { food: 'Paneer bhurji or chana masala', portion: '150g paneer or 1 cup chana' },
+                        { food: 'Dal', portion: '1 cup' },
+                        { food: 'Salad', portion: '1 bowl' },
+                    ],
+                    macros: { protein: '32–38g', carbs: '80–90g', fats: '12–15g' },
+                    tip: 'Have a big lunch — this fuels afternoon training.',
+                },
+                {
+                    name: 'Evening Snack',
+                    icon: '🌤️',
+                    time: '4:30 – 5:00 PM',
+                    items: [
+                        { food: 'Greek yogurt with nuts', portion: '200g yogurt + handful nuts' },
+                        { food: 'Banana or apple', portion: '1 fruit' },
+                        { food: 'Boiled eggs (if you eat)', portion: '1–2 eggs', note: true },
+                    ],
+                    macros: { protein: '18–22g', carbs: '30–35g', fats: '10–12g' },
+                    tip: 'Have this 60–90 min before your workout for best energy.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '7:30 – 8:30 PM',
+                    items: [
+                        { food: 'Quinoa or chapati', portion: '1 cup quinoa or 2 chapatis' },
+                        { food: 'Rajma or moong dal', portion: '1.5 cups cooked' },
+                        { food: 'Sautéed tofu or paneer', portion: '100g' },
+                        { food: 'Vegetables', portion: '1 cup' },
+                    ],
+                    macros: { protein: '28–32g', carbs: '55–65g', fats: '10–12g' },
+                    tip: 'Keep dinner protein high and carbs moderate.',
+                },
+            ],
+            5: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:00 – 8:00 AM',
+                    items: [
+                        { food: 'Oats with banana and peanut butter', portion: '1 cup oats + 1 banana + 2 tbsp PB' },
+                        { food: 'Whole milk', portion: '1 glass' },
+                        { food: 'Boiled eggs (if you eat)', portion: '2 eggs', note: true },
+                    ],
+                    macros: { protein: '25–30g', carbs: '70g', fats: '15g' },
+                    tip: 'Never skip breakfast when bulking.',
+                },
+                {
+                    name: 'Mid-Morning',
+                    icon: '🌤️',
+                    time: '10:00 – 10:30 AM',
+                    items: [
+                        { food: 'Handful of mixed nuts (almonds, walnuts)', portion: '30g' },
+                        { food: 'Banana or mango', portion: '1 fruit' },
+                        { food: 'Protein shake (optional)', portion: '1 scoop in milk' },
+                    ],
+                    macros: { protein: '12–15g', carbs: '35–40g', fats: '15g' },
+                    tip: 'This keeps energy stable and prevents a lunch crash.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '1:00 – 2:00 PM',
+                    items: [
+                        { food: 'Brown rice', portion: '2 cups cooked' },
+                        { food: 'Paneer curry or rajma', portion: '150g paneer or 1.5 cups rajma' },
+                        { food: 'Dal', portion: '1 cup' },
+                        { food: 'Curd', portion: '1 cup' },
+                    ],
+                    macros: { protein: '35–40g', carbs: '90–100g', fats: '12–15g' },
+                    tip: 'Biggest meal of the day — go all in.',
+                },
+                {
+                    name: 'Evening Snack',
+                    icon: '⚡',
+                    time: '4:30 – 5:00 PM',
+                    items: [
+                        { food: 'Greek yogurt', portion: '200g' },
+                        { food: 'Boiled eggs (if you eat)', portion: '2 eggs', note: true },
+                        { food: 'Brown bread with peanut butter', portion: '2 slices + 2 tbsp PB' },
+                    ],
+                    macros: { protein: '25–28g', carbs: '35–40g', fats: '12g' },
+                    tip: 'Pre-workout fuel. Eat 60 min before training.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '8:00 – 9:00 PM',
+                    items: [
+                        { food: 'Chapati', portion: '3 chapatis' },
+                        { food: 'Tofu bhurji or paneer sabzi', portion: '150g' },
+                        { food: 'Moong dal', portion: '1 cup' },
+                        { food: 'Salad', portion: '1 bowl' },
+                    ],
+                    macros: { protein: '30–35g', carbs: '60–70g', fats: '10–12g' },
+                    tip: 'Post-workout dinner — prioritize protein.',
+                },
+            ],
+        },
+        lean: {
+            3: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:00 – 8:00 AM',
+                    items: [
+                        { food: 'Oats with berries (no sugar)', portion: '3/4 cup oats' },
+                        { food: 'Low-fat milk or almond milk', portion: '1 glass' },
+                        { food: 'Boiled eggs (if you eat)', portion: '2 eggs — whites only or whole', note: true },
+                    ],
+                    macros: { protein: '20–25g', carbs: '40–50g', fats: '6–8g' },
+                    tip: 'Keep breakfast light but protein-rich to stay full longer.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '1:00 – 2:00 PM',
+                    items: [
+                        { food: 'Quinoa or 2 chapatis', portion: '1 cup quinoa or 2 chapatis' },
+                        { food: 'Grilled tofu or paneer (low oil)', portion: '120g' },
+                        { food: 'Dal (low fat)', portion: '1 cup' },
+                        { food: 'Large salad', portion: '2 bowls' },
+                    ],
+                    macros: { protein: '28–32g', carbs: '50–55g', fats: '8–10g' },
+                    tip: 'Use minimal oil. Grill or steam instead of frying.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '7:00 – 7:30 PM',
+                    items: [
+                        { food: 'Moong dal or lentil soup', portion: '1.5 cups' },
+                        { food: '1 chapati or skip carbs', portion: '1 chapati or none' },
+                        { food: 'Sautéed vegetables (no oil)', portion: '1.5 cups' },
+                        { food: 'Low-fat curd', portion: '1 cup' },
+                    ],
+                    macros: { protein: '22–26g', carbs: '30–40g', fats: '4–6g' },
+                    tip: 'Cut carbs at dinner when cutting. Keep protein high.',
+                },
+            ],
+            4: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:00 – 8:00 AM',
+                    items: [
+                        { food: 'Moong dal chilla (2 pieces)', portion: '2 chillas with mint chutney' },
+                        { food: 'Low-fat curd', portion: '1 cup' },
+                        { food: 'Boiled eggs whites (if you eat)', portion: '3 whites', note: true },
+                    ],
+                    macros: { protein: '22–25g', carbs: '35–40g', fats: '5–7g' },
+                    tip: 'Moong dal chilla is a great high protein low calorie breakfast.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '12:30 – 1:30 PM',
+                    items: [
+                        { food: 'Brown rice', portion: '1 cup cooked' },
+                        { food: 'Dal or sambhar', portion: '1 cup' },
+                        { food: 'Grilled paneer or tofu', portion: '100g' },
+                        { food: 'Salad', portion: '1 large bowl' },
+                    ],
+                    macros: { protein: '26–30g', carbs: '50–55g', fats: '7–9g' },
+                    tip: 'Salad first, then rice. This reduces overeating.',
+                },
+                {
+                    name: 'Evening Snack',
+                    icon: '🌤️',
+                    time: '4:00 – 4:30 PM',
+                    items: [
+                        { food: 'Sprouts chaat', portion: '1 cup' },
+                        { food: 'Cucumber and carrot sticks', portion: '1 cup' },
+                        { food: 'Green tea', portion: '1 cup' },
+                    ],
+                    macros: { protein: '10–12g', carbs: '20–25g', fats: '2–3g' },
+                    tip: 'Low calorie snack that keeps hunger at bay.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '7:00 – 7:30 PM',
+                    items: [
+                        { food: 'Lentil soup (masoor dal)', portion: '1.5 cups' },
+                        { food: 'Steamed vegetables', portion: '1.5 cups' },
+                        { food: 'Low-fat paneer', portion: '80g' },
+                    ],
+                    macros: { protein: '22–25g', carbs: '25–30g', fats: '4–5g' },
+                    tip: 'No carbs after 7 PM when cutting. Protein and veggies only.',
+                },
+            ],
+            5: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:00 – 8:00 AM',
+                    items: [
+                        { food: 'Oats (plain, no sugar)', portion: '3/4 cup' },
+                        { food: 'Low-fat milk', portion: '1 glass' },
+                        { food: 'Boiled eggs (if you eat)', portion: '2 egg whites', note: true },
+                    ],
+                    macros: { protein: '18–22g', carbs: '40–45g', fats: '4–6g' },
+                    tip: 'Start light. No sugar, no juice.',
+                },
+                {
+                    name: 'Mid-Morning',
+                    icon: '🌤️',
+                    time: '10:00 AM',
+                    items: [
+                        { food: 'Apple or guava', portion: '1 fruit' },
+                        { food: '5–6 almonds', portion: '10g' },
+                        { food: 'Green tea', portion: '1 cup' },
+                    ],
+                    macros: { protein: '3–4g', carbs: '20–25g', fats: '5g' },
+                    tip: 'This mid-morning snack stops you from overeating at lunch.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '1:00 PM',
+                    items: [
+                        { food: 'Quinoa or 1.5 chapati', portion: '1 cup quinoa or 1.5 chapatis' },
+                        { food: 'Tofu stir fry or dal', portion: '120g tofu or 1 cup dal' },
+                        { food: 'Salad (large)', portion: '2 bowls' },
+                        { food: 'Low-fat curd', portion: '1 small cup' },
+                    ],
+                    macros: { protein: '28–32g', carbs: '45–50g', fats: '7–9g' },
+                    tip: 'This is your biggest meal. Keep carbs moderate, protein high.',
+                },
+                {
+                    name: 'Evening Snack',
+                    icon: '⚡',
+                    time: '4:30 PM',
+                    items: [
+                        { food: 'Sprouts', portion: '1 cup' },
+                        { food: 'Buttermilk (chaas, no salt)', portion: '1 glass' },
+                    ],
+                    macros: { protein: '8–10g', carbs: '15–18g', fats: '2g' },
+                    tip: 'Very low calorie but filling. Perfect pre-workout snack.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '7:30 PM',
+                    items: [
+                        { food: 'Lentil vegetable soup', portion: '1.5 cups' },
+                        { food: 'Steamed broccoli and beans', portion: '1.5 cups' },
+                        { food: 'Low fat paneer or tofu', portion: '80g' },
+                    ],
+                    macros: { protein: '20–24g', carbs: '20–25g', fats: '4–5g' },
+                    tip: 'Keep dinner under 400 calories when cutting.',
+                },
+            ],
+        },
+        maintenance: {
+            3: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:30 – 8:30 AM',
+                    items: [
+                        { food: 'Poha or upma', portion: '1.5 cups cooked' },
+                        { food: 'Milk or chai (low sugar)', portion: '1 cup' },
+                        { food: 'Boiled eggs (if you eat)', portion: '1–2 eggs', note: true },
+                    ],
+                    macros: { protein: '15–18g', carbs: '55–60g', fats: '8–10g' },
+                    tip: 'A traditional Indian breakfast works perfectly for maintenance.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '1:00 – 2:00 PM',
+                    items: [
+                        { food: 'Chapati', portion: '2–3 chapatis' },
+                        { food: 'Dal or rajma', portion: '1 cup' },
+                        { food: 'Sabzi (any)', portion: '1 cup' },
+                        { food: 'Curd', portion: '1 cup' },
+                    ],
+                    macros: { protein: '22–26g', carbs: '60–70g', fats: '10–12g' },
+                    tip: 'Regular homestyle Indian meal. Perfect for maintenance.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '7:30 – 8:00 PM',
+                    items: [
+                        { food: 'Rice or chapati', portion: '1 cup rice or 2 chapatis' },
+                        { food: 'Dal or paneer dish', portion: '1 cup' },
+                        { food: 'Salad or vegetable', portion: '1 cup' },
+                    ],
+                    macros: { protein: '20–24g', carbs: '50–60g', fats: '8–10g' },
+                    tip: 'Keep dinner balanced. Don\'t overeat or undereat.',
+                },
+            ],
+            4: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:30 AM',
+                    items: [
+                        { food: 'Idli (3–4) with sambar', portion: '3–4 idlis + 1 cup sambar' },
+                        { food: 'Coconut chutney', portion: '2 tbsp' },
+                        { food: 'Boiled eggs (if you eat)', portion: '1 egg', note: true },
+                    ],
+                    macros: { protein: '14–18g', carbs: '55–60g', fats: '8–10g' },
+                    tip: 'South Indian breakfast is naturally balanced and gut-friendly.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '1:00 PM',
+                    items: [
+                        { food: 'Rice', portion: '1.5 cups cooked' },
+                        { food: 'Dal', portion: '1 cup' },
+                        { food: 'Any sabzi', portion: '1 cup' },
+                        { food: 'Curd', portion: '1 cup' },
+                    ],
+                    macros: { protein: '20–24g', carbs: '65–70g', fats: '8–10g' },
+                    tip: 'Classic thali format works great for maintenance.',
+                },
+                {
+                    name: 'Evening Snack',
+                    icon: '🌤️',
+                    time: '5:00 PM',
+                    items: [
+                        { food: 'Roasted chana or makhana', portion: '1 cup' },
+                        { food: 'Chai (low sugar)', portion: '1 cup' },
+                    ],
+                    macros: { protein: '8–10g', carbs: '25–30g', fats: '3–4g' },
+                    tip: 'Light snack. Avoid fried snacks in the evening.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '7:30 – 8:00 PM',
+                    items: [
+                        { food: 'Chapati', portion: '2 chapatis' },
+                        { food: 'Paneer or tofu dish', portion: '100g' },
+                        { food: 'Dal or lentil soup', portion: '1 cup' },
+                        { food: 'Salad', portion: '1 bowl' },
+                    ],
+                    macros: { protein: '22–26g', carbs: '45–55g', fats: '8–10g' },
+                    tip: 'Balanced dinner. Don\'t stress the macros too much on maintenance.',
+                },
+            ],
+            5: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:30 AM',
+                    items: [
+                        { food: 'Oats or poha', portion: '1 cup' },
+                        { food: 'Milk', portion: '1 glass' },
+                        { food: 'Boiled eggs (if you eat)', portion: '1–2 eggs', note: true },
+                    ],
+                    macros: { protein: '16–20g', carbs: '50–55g', fats: '8–10g' },
+                    tip: 'Balanced start to the day.',
+                },
+                {
+                    name: 'Mid-Morning',
+                    icon: '🌤️',
+                    time: '10:30 AM',
+                    items: [
+                        { food: 'Seasonal fruit', portion: '1 medium fruit' },
+                        { food: 'Almonds', portion: '8–10 almonds' },
+                    ],
+                    macros: { protein: '4–5g', carbs: '22–25g', fats: '7g' },
+                    tip: 'Keep it simple. Fruit + nuts is always a good combo.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '1:00 PM',
+                    items: [
+                        { food: 'Rice or chapati', portion: '1.5 cups rice or 2 chapatis' },
+                        { food: 'Dal + sabzi', portion: '1 cup each' },
+                        { food: 'Curd or buttermilk', portion: '1 cup' },
+                    ],
+                    macros: { protein: '20–24g', carbs: '60–70g', fats: '8–10g' },
+                    tip: 'Classic lunch. Keep it home-cooked as much as possible.',
+                },
+                {
+                    name: 'Evening Snack',
+                    icon: '⚡',
+                    time: '5:00 PM',
+                    items: [
+                        { food: 'Roasted chana or makhana', portion: '1 cup' },
+                        { food: 'Green tea or chaas', portion: '1 cup' },
+                    ],
+                    macros: { protein: '8–10g', carbs: '25g', fats: '3g' },
+                    tip: 'Light and healthy. Keeps you full until dinner.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '7:30 PM',
+                    items: [
+                        { food: 'Chapati', portion: '2 chapatis' },
+                        { food: 'Paneer or tofu', portion: '100g' },
+                        { food: 'Dal', portion: '1 cup' },
+                        { food: 'Salad', portion: '1 bowl' },
+                    ],
+                    macros: { protein: '22–26g', carbs: '45–50g', fats: '8–10g' },
+                    tip: 'Balanced dinner. Enjoy it without guilt.',
+                },
+            ],
+        },
+    },
+    nonveg: {
+        bulk: {
+            3: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:00 – 8:00 AM',
+                    items: [
+                        { food: 'Whole eggs scrambled', portion: '3 whole eggs' },
+                        { food: 'Brown bread', portion: '2–3 slices' },
+                        { food: 'Banana', portion: '1 large' },
+                        { food: 'Whole milk', portion: '1 glass' },
+                    ],
+                    macros: { protein: '35–40g', carbs: '70–80g', fats: '18–22g' },
+                    tip: 'Eggs + milk + bread is one of the best bulking breakfasts. Simple and effective.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '1:00 – 2:00 PM',
+                    items: [
+                        { food: 'Brown rice', portion: '2 cups cooked' },
+                        { food: 'Grilled chicken', portion: '180–200g' },
+                        { food: 'Dal or rajma', portion: '1 cup' },
+                        { food: 'Curd', portion: '1 cup' },
+                    ],
+                    macros: { protein: '50–55g', carbs: '85–95g', fats: '12–15g' },
+                    tip: 'Chicken + rice is the classic bulk combo. Don\'t overthink it.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '7:30 – 8:30 PM',
+                    items: [
+                        { food: 'Chapati or rice', portion: '3 chapatis or 1.5 cups rice' },
+                        { food: 'Fish curry or chicken curry', portion: '150g fish or 150g chicken' },
+                        { food: 'Vegetables', portion: '1 cup' },
+                    ],
+                    macros: { protein: '40–45g', carbs: '60–70g', fats: '12–15g' },
+                    tip: 'Post-workout dinner should be protein-heavy. Fish is great here.',
+                },
+            ],
+            4: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:00 AM',
+                    items: [
+                        { food: 'Omelette (3 eggs)', portion: '3 eggs with vegetables' },
+                        { food: 'Brown bread', portion: '2 slices' },
+                        { food: 'Whole milk', portion: '1 glass' },
+                    ],
+                    macros: { protein: '35–38g', carbs: '50–55g', fats: '18–20g' },
+                    tip: 'Veggie omelette gives you protein + micronutrients.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '1:00 PM',
+                    items: [
+                        { food: 'Brown rice', portion: '2 cups cooked' },
+                        { food: 'Grilled chicken breast', portion: '200g' },
+                        { food: 'Dal', portion: '1 cup' },
+                        { food: 'Salad', portion: '1 bowl' },
+                    ],
+                    macros: { protein: '52–58g', carbs: '85–90g', fats: '10–12g' },
+                    tip: 'Biggest meal of the day. Load up on protein.',
+                },
+                {
+                    name: 'Evening Snack',
+                    icon: '🌤️',
+                    time: '5:00 PM',
+                    items: [
+                        { food: 'Boiled eggs', portion: '2–3 eggs' },
+                        { food: 'Banana', portion: '1 large' },
+                        { food: 'Peanut butter toast', portion: '1 slice + 1 tbsp PB' },
+                    ],
+                    macros: { protein: '22–26g', carbs: '40–45g', fats: '14–16g' },
+                    tip: 'Pre-workout snack. Eat 60 min before training.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '8:00 PM',
+                    items: [
+                        { food: 'Chapati', portion: '3 chapatis' },
+                        { food: 'Fish or chicken curry', portion: '150g' },
+                        { food: 'Vegetables', portion: '1 cup' },
+                        { food: 'Curd', portion: '1 cup' },
+                    ],
+                    macros: { protein: '40–45g', carbs: '60–65g', fats: '12–14g' },
+                    tip: 'Prioritize protein at dinner for overnight muscle repair.',
+                },
+            ],
+            5: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:00 AM',
+                    items: [
+                        { food: 'Scrambled eggs (3)', portion: '3 whole eggs' },
+                        { food: 'Brown bread', portion: '2 slices' },
+                        { food: 'Whole milk', portion: '1 glass' },
+                        { food: 'Banana', portion: '1 large' },
+                    ],
+                    macros: { protein: '38–42g', carbs: '75–80g', fats: '18–20g' },
+                    tip: 'Power breakfast for bulking. Don\'t skip.',
+                },
+                {
+                    name: 'Mid-Morning',
+                    icon: '🌤️',
+                    time: '10:30 AM',
+                    items: [
+                        { food: 'Boiled eggs', portion: '2 eggs' },
+                        { food: 'Mixed nuts', portion: '30g' },
+                        { food: 'Fruit', portion: '1 banana or mango' },
+                    ],
+                    macros: { protein: '16–18g', carbs: '35–40g', fats: '15g' },
+                    tip: 'Keeps energy high between breakfast and lunch.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '1:00 PM',
+                    items: [
+                        { food: 'Brown rice', portion: '2.5 cups cooked' },
+                        { food: 'Grilled chicken breast', portion: '220g' },
+                        { food: 'Dal', portion: '1 cup' },
+                        { food: 'Curd', portion: '1 cup' },
+                    ],
+                    macros: { protein: '55–60g', carbs: '95–100g', fats: '10–12g' },
+                    tip: 'Maximum carbs and protein. Fuel up hard.',
+                },
+                {
+                    name: 'Evening Snack',
+                    icon: '⚡',
+                    time: '5:00 PM',
+                    items: [
+                        { food: 'Boiled eggs', portion: '2 eggs' },
+                        { food: 'Greek yogurt', portion: '200g' },
+                        { food: 'Oats (dry, soaked)', portion: '1/2 cup' },
+                    ],
+                    macros: { protein: '28–32g', carbs: '35–40g', fats: '10–12g' },
+                    tip: 'Pre-workout. Eat 60 min before the gym.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '8:30 PM',
+                    items: [
+                        { food: 'Chapati', portion: '3 chapatis' },
+                        { food: 'Chicken or fish', portion: '200g' },
+                        { food: 'Vegetable curry', portion: '1 cup' },
+                    ],
+                    macros: { protein: '45–50g', carbs: '55–60g', fats: '10–12g' },
+                    tip: 'Post-gym dinner. High protein, moderate carbs.',
+                },
+            ],
+        },
+        lean: {
+            3: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:00 – 8:00 AM',
+                    items: [
+                        { food: 'Egg whites (4–5)', portion: '4–5 egg whites + 1 yolk' },
+                        { food: 'Brown bread (1 slice)', portion: '1 slice' },
+                        { food: 'Black coffee or green tea', portion: '1 cup' },
+                    ],
+                    macros: { protein: '22–25g', carbs: '20–25g', fats: '5–6g' },
+                    tip: 'Low calorie, high protein start. Avoid fruit juice.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '1:00 – 2:00 PM',
+                    items: [
+                        { food: 'Grilled chicken breast', portion: '180g' },
+                        { food: 'Brown rice or quinoa', portion: '1 cup cooked' },
+                        { food: 'Steamed broccoli and beans', portion: '1.5 cups' },
+                        { food: 'Salad', portion: '1 large bowl' },
+                    ],
+                    macros: { protein: '42–48g', carbs: '45–55g', fats: '6–8g' },
+                    tip: 'Chicken breast is your best friend when cutting. Very lean protein.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '7:00 – 7:30 PM',
+                    items: [
+                        { food: 'Grilled fish or chicken', portion: '150g' },
+                        { food: 'Steamed vegetables', portion: '2 cups' },
+                        { food: 'Low-fat curd', portion: '1 cup' },
+                    ],
+                    macros: { protein: '38–42g', carbs: '20–25g', fats: '6–8g' },
+                    tip: 'No carbs at dinner when cutting. Protein + veggies only.',
+                },
+            ],
+            4: [
+                {
+                    name: 'Breakfast',
+                    icon: '🌅',
+                    time: '7:00 AM',
+                    items: [
+                        { food: 'Egg white omelette (4 whites)', portion: '4 egg whites + vegetables' },
+                        { food: 'Brown bread', portion: '1 slice' },
+                        { food: 'Green tea', portion: '1 cup' },
+                    ],
+                    macros: { protein: '20–22g', carbs: '18–20g', fats: '3–4g' },
+                    tip: 'Minimal calories. Max protein. Perfect cut breakfast.',
+                },
+                {
+                    name: 'Lunch',
+                    icon: '☀️',
+                    time: '12:30 PM',
+                    items: [
+                        { food: 'Grilled chicken', portion: '180g' },
+                        { food: 'Brown rice', portion: '1 cup cooked' },
+                        { food: 'Salad (large)', portion: '2 bowls' },
+                        { food: 'Lemon water', portion: '1 glass' },
+                    ],
+                    macros: { protein: '42–46g', carbs: '45–50g', fats: '5–6g' },
+                    tip: 'Dress the salad with lemon + salt only. Zero calorie dressing.',
+                },
+                {
+                    name: 'Evening Snack',
+                    icon: '🌤️',
+                    time: '4:00 PM',
+                    items: [
+                        { food: 'Boiled eggs', portion: '2 whites + 1 whole' },
+                        { food: 'Cucumber and carrot', portion: '1 cup' },
+                    ],
+                    macros: { protein: '12–14g', carbs: '8–10g', fats: '5g' },
+                    tip: 'Super low calorie snack. Keeps hunger away.',
+                },
+                {
+                    name: 'Dinner',
+                    icon: '🌙',
+                    time: '7:00 PM',
+                    items: [
+                        { food: 'Grilled fish (rohu / surmai)', portion: '150g' },
+                        { food: 'Steamed vegetables', portion: '2 cups' },
+                        { food: 'Low-fat curd', portion: '1 cup' },
+                    ],
+                    macros: { protein: '35–40g', carbs: '15–18g', fats: '6–8g' },
+                    tip: 'Fish is leaner than chicken. Great for cutting.',
+                },
+            ],
+            5: [
+                {
+                    name: 'Breakfast', icon: '🌅', time: '7:00 AM',
+                    items: [
+                        { food: 'Egg white omelette', portion: '4 whites + 1 yolk' },
+                        { food: 'Brown bread', portion: '1 slice' },
+                        { food: 'Black coffee', portion: '1 cup' },
+                    ],
+                    macros: { protein: '20–22g', carbs: '18g', fats: '5g' },
+                    tip: 'Black coffee boosts metabolism. No sugar.',
+                },
+                {
+                    name: 'Mid-Morning', icon: '🌤️', time: '10:00 AM',
+                    items: [
+                        { food: 'Apple', portion: '1 medium' },
+                        { food: '5 almonds', portion: '10g' },
+                    ],
+                    macros: { protein: '2g', carbs: '20g', fats: '5g' },
+                    tip: 'Very low calorie. Just keeps hunger at bay.',
+                },
+                {
+                    name: 'Lunch', icon: '☀️', time: '1:00 PM',
+                    items: [
+                        { food: 'Grilled chicken breast', portion: '180g' },
+                        { food: 'Brown rice', portion: '3/4 cup cooked' },
+                        { food: 'Steamed broccoli', portion: '1.5 cups' },
+                        { food: 'Salad', portion: '1 bowl' },
+                    ],
+                    macros: { protein: '42–46g', carbs: '40–45g', fats: '5–6g' },
+                    tip: 'Biggest meal. Still keep it clean.',
+                },
+                {
+                    name: 'Evening Snack', icon: '⚡', time: '4:30 PM',
+                    items: [
+                        { food: 'Boiled egg whites', portion: '3 whites' },
+                        { food: 'Cucumber slices', portion: '1 cup' },
+                    ],
+                    macros: { protein: '10g', carbs: '5g', fats: '1g' },
+                    tip: 'Barely any calories. Just protein.',
+                },
+                {
+                    name: 'Dinner', icon: '🌙', time: '7:00 PM',
+                    items: [
+                        { food: 'Grilled fish or chicken', portion: '150g' },
+                        { food: 'Steamed vegetables', portion: '2 cups' },
+                        { food: 'Low-fat curd', portion: '1 cup' },
+                    ],
+                    macros: { protein: '38–42g', carbs: '15–18g', fats: '5–7g' },
+                    tip: 'Lean protein + veggies. No carbs at night.',
+                },
+            ],
+        },
+        maintenance: {
+            3: [
+                {
+                    name: 'Breakfast', icon: '🌅', time: '7:30 AM',
+                    items: [
+                        { food: 'Eggs (2–3 whole)', portion: '2–3 eggs any style' },
+                        { food: 'Brown bread or paratha (1)', portion: '2 slices or 1 paratha' },
+                        { food: 'Milk or chai', portion: '1 cup' },
+                    ],
+                    macros: { protein: '22–26g', carbs: '45–50g', fats: '14–16g' },
+                    tip: 'Flexible and balanced. Cook eggs however you like.',
+                },
+                {
+                    name: 'Lunch', icon: '☀️', time: '1:00 PM',
+                    items: [
+                        { food: 'Rice or chapati', portion: '1.5 cups rice or 2–3 chapatis' },
+                        { food: 'Chicken curry or fish curry', portion: '120–150g' },
+                        { food: 'Dal', portion: '1 cup' },
+                        { food: 'Curd', portion: '1 cup' },
+                    ],
+                    macros: { protein: '35–40g', carbs: '65–70g', fats: '12–14g' },
+                    tip: 'Regular Indian meal. Very sustainable for maintenance.',
+                },
+                {
+                    name: 'Dinner', icon: '🌙', time: '7:30 – 8:00 PM',
+                    items: [
+                        { food: 'Chapati or rice', portion: '2 chapatis or 1 cup rice' },
+                        { food: 'Chicken or eggs', portion: '120g chicken or 2 eggs' },
+                        { food: 'Sabzi or salad', portion: '1 cup' },
+                    ],
+                    macros: { protein: '28–32g', carbs: '50–55g', fats: '10–12g' },
+                    tip: 'Keep dinner moderate. Don\'t overeat before bed.',
+                },
+            ],
+            4: [
+                {
+                    name: 'Breakfast', icon: '🌅', time: '7:30 AM',
+                    items: [
+                        { food: 'Omelette (2 eggs)', portion: '2 whole eggs + veggies' },
+                        { food: 'Brown bread', portion: '2 slices' },
+                        { food: 'Chai or coffee', portion: '1 cup' },
+                    ],
+                    macros: { protein: '20–24g', carbs: '40–45g', fats: '12–14g' },
+                    tip: 'Classic, filling, and balanced.',
+                },
+                {
+                    name: 'Lunch', icon: '☀️', time: '1:00 PM',
+                    items: [
+                        { food: 'Rice', portion: '1.5 cups cooked' },
+                        { food: 'Chicken or fish curry', portion: '130g' },
+                        { food: 'Dal', portion: '1 cup' },
+                        { food: 'Salad', portion: '1 bowl' },
+                    ],
+                    macros: { protein: '35–38g', carbs: '65–70g', fats: '10–12g' },
+                    tip: 'Homestyle Indian lunch. No need to overthink.',
+                },
+                {
+                    name: 'Evening Snack', icon: '🌤️', time: '5:00 PM',
+                    items: [
+                        { food: 'Boiled egg (1)', portion: '1 egg' },
+                        { food: 'Roasted chana or biscuits', portion: '1 cup or 3–4 biscuits' },
+                        { food: 'Chai', portion: '1 cup' },
+                    ],
+                    macros: { protein: '10–12g', carbs: '28–32g', fats: '6–8g' },
+                    tip: 'Light evening snack. Don\'t overdo it.',
+                },
+                {
+                    name: 'Dinner', icon: '🌙', time: '7:30 PM',
+                    items: [
+                        { food: 'Chapati', portion: '2–3 chapatis' },
+                        { food: 'Chicken or egg curry', portion: '120g chicken or 2 eggs' },
+                        { food: 'Vegetable', portion: '1 cup' },
+                    ],
+                    macros: { protein: '28–32g', carbs: '50–55g', fats: '10–12g' },
+                    tip: 'Balanced dinner. Enjoy it.',
+                },
+            ],
+            5: [
+                {
+                    name: 'Breakfast', icon: '🌅', time: '7:30 AM',
+                    items: [
+                        { food: 'Eggs (2)', portion: '2 whole eggs any style' },
+                        { food: 'Brown bread', portion: '2 slices' },
+                        { food: 'Milk', portion: '1 glass' },
+                    ],
+                    macros: { protein: '24–26g', carbs: '45–50g', fats: '12–14g' },
+                    tip: 'Simple and consistent.',
+                },
+                {
+                    name: 'Mid-Morning', icon: '🌤️', time: '10:30 AM',
+                    items: [
+                        { food: 'Fruit', portion: '1 medium' },
+                        { food: 'Nuts', portion: '10–12 almonds' },
+                    ],
+                    macros: { protein: '4–5g', carbs: '22–25g', fats: '7g' },
+                    tip: 'Easy snack. Keeps you going.',
+                },
+                {
+                    name: 'Lunch', icon: '☀️', time: '1:00 PM',
+                    items: [
+                        { food: 'Rice or chapati', portion: '1.5 cups rice or 2 chapatis' },
+                        { food: 'Chicken or fish curry', portion: '130g' },
+                        { food: 'Dal + vegetable', portion: '1 cup each' },
+                    ],
+                    macros: { protein: '35–38g', carbs: '65g', fats: '10g' },
+                    tip: 'Full Indian thali. Satisfying and balanced.',
+                },
+                {
+                    name: 'Evening Snack', icon: '⚡', time: '5:00 PM',
+                    items: [
+                        { food: 'Boiled egg', portion: '1–2 eggs' },
+                        { food: 'Chai', portion: '1 cup' },
+                    ],
+                    macros: { protein: '10–14g', carbs: '10g', fats: '6–8g' },
+                    tip: 'Light snack before or after evening workout.',
+                },
+                {
+                    name: 'Dinner', icon: '🌙', time: '7:30 PM',
+                    items: [
+                        { food: 'Chapati', portion: '2 chapatis' },
+                        { food: 'Chicken or egg dish', portion: '120g' },
+                        { food: 'Sabzi + dal', portion: '1 cup each' },
+                    ],
+                    macros: { protein: '28–32g', carbs: '48–52g', fats: '10g' },
+                    tip: 'Comfortable dinner. Don\'t skip it.',
+                },
+            ],
+        },
+    },
+};
+
+const nutritionTips = {
+    bulk:        { water: '3.5–4 litres/day', focus: 'Protein + Carbs', supplement: 'Creatine monohydrate (5g/day) and whey protein post-workout are well-researched for bulking.' },
+    lean:        { water: '4–4.5 litres/day', focus: 'Protein + Fibre', supplement: 'Whey protein isolate post-workout. Green tea extract can help with fat metabolism.' },
+    maintenance: { water: '3–3.5 litres/day', focus: 'Balanced Macros', supplement: 'A basic multivitamin and omega-3 fish oil (or flaxseed oil for veg) covers your bases.' },
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let currentDiet = null;
+let currentGoal = null;
+let currentMeals = null;
+
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+function scrollTo(id) { setTimeout(() => document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' }), 100); }
+function clearActive(sel) { document.querySelectorAll(sel).forEach(el => el.classList.remove('active')); }
+
+function selectDiet(diet) {
+    currentDiet = diet;
+    currentGoal = null;
+    currentMeals = null;
+    clearActive('.option-card');
+    document.querySelector(`[data-diet="${diet}"]`).classList.add('active');
+    hide('step-meals'); hide('step-plan'); hide('step-tips');
+    show('step-goal');
+    scrollTo('step-goal');
+}
+
+function selectGoal(goal) {
+    currentGoal = goal;
+    currentMeals = null;
+    clearActive('[data-goal]');
+    document.querySelector(`[data-goal="${goal}"]`).classList.add('active');
+    hide('step-plan'); hide('step-tips');
+    show('step-meals');
+    scrollTo('step-meals');
+}
+
+function selectMeals(meals) {
+    currentMeals = meals;
+    clearActive('[data-meals]');
+    document.querySelector(`[data-meals="${meals}"]`).classList.add('active');
+    renderPlan();
+}
+
+function renderPlan() {
+    const meals = mealPlans[currentDiet][currentGoal][currentMeals];
+    const output = document.getElementById('plan-output');
+
+    output.innerHTML = meals.map(meal => `
+        <div class="meal-card">
+            <div class="meal-header">
+                <div class="meal-title">
+                    <span class="meal-icon">${meal.icon}</span>
+                    <div>
+                        <h3>${meal.name}</h3>
+                        <span class="meal-time">${meal.time}</span>
+                    </div>
+                </div>
+                <div class="macro-badges">
+                    <span class="macro-badge macro-p">P: ${meal.macros.protein}</span>
+                    <span class="macro-badge macro-c">C: ${meal.macros.carbs}</span>
+                    <span class="macro-badge macro-f">F: ${meal.macros.fats}</span>
+                </div>
+            </div>
+            <ul class="meal-items">
+                ${meal.items.map(item => `
+                    <li>
+                        <span class="item-food">${item.food}${item.note ? ' <span class="egg-note">(include if you eat eggs)</span>' : ''}</span>
+                        <span class="item-portion">${item.portion}</span>
+                    </li>
+                `).join('')}
+            </ul>
+            <div class="meal-tip">💡 ${meal.tip}</div>
+        </div>
+    `).join('');
+
+    // Tips
+    const tip = nutritionTips[currentGoal];
+    document.getElementById('tips-output').innerHTML = `
+        <div class="tips-grid">
+            <div class="tip-card">
+                <span class="tip-icon">💧</span>
+                <h4>Daily Water</h4>
+                <p>${tip.water}</p>
+            </div>
+            <div class="tip-card">
+                <span class="tip-icon">🎯</span>
+                <h4>Focus On</h4>
+                <p>${tip.focus}</p>
+            </div>
+            <div class="tip-card tip-card--wide">
+                <span class="tip-icon">💊</span>
+                <h4>Supplement Note</h4>
+                <p>${tip.supplement}</p>
+            </div>
+        </div>
+    `;
+
+    show('step-plan');
+    show('step-tips');
+    scrollTo('step-plan');
+}
+</script>
+{% endblock %}

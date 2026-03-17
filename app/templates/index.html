@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}CONST — Your Personal Trainer{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <div class="hero-bg">
+        <div class="grid-overlay"></div>
+    </div>
+    <div class="hero-content">
+        <p class="hero-eyebrow">AI-Powered Fitness</p>
+        <h1 class="hero-title">TRAIN LIKE<br><span>A CONSTANT</span></h1>
+        <p class="hero-sub">Personalized workouts, smart diet plans,<br>and a chatbot that actually helps.</p>
+        <div class="hero-cta">
+            <a href="#" class="btn-primary">Get Started</a>
+            <a href="#features" class="btn-ghost">See Features ↓</a>
+        </div>
+    </div>
+    <div class="hero-stats">
+        <div class="stat">
+            <span class="stat-num">3</span>
+            <span class="stat-label">Workout Types</span>
+        </div>
+        <div class="stat">
+            <span class="stat-num">3</span>
+            <span class="stat-label">Diet Plans</span>
+        </div>
+        <div class="stat">
+            <span class="stat-num">24/7</span>
+            <span class="stat-label">AI Chatbot</span>
+        </div>
+    </div>
+</section>
+
+<section class="features" id="features">
+    <p class="section-label">What we offer</p>
+    <h2 class="section-title">Everything you need<br>to stay on track</h2>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">🏋️</div>
+            <h3>Smart Workouts</h3>
+            <p>Cardio, strength, and flexibility plans tailored to your goals and fitness level.</p>
+        </div>
+        <div class="feature-card feature-card--accent">
+            <div class="feature-icon">🥗</div>
+            <h3>Diet Planning</h3>
+            <p>Vegetarian, non-veg, or keto — get meal suggestions that match your lifestyle.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📈</div>
+            <h3>Progress Tracking</h3>
+            <p>Log your weight and track your journey toward your goal every single day.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💬</div>
+            <h3>AI Chatbot</h3>
+            <p>Ask anything about fitness, diet, or alternatives. Your 24/7 personal coach.</p>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

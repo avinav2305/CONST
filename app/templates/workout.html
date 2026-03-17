@@ -1,0 +1,527 @@
+{% extends "base.html" %}
+{% block title %}Workouts — CONST{% endblock %}
+
+{% block content %}
+<section class="workout-section">
+
+    <div class="workout-header">
+        <p class="auth-eyebrow">Training Hub</p>
+        <h1 class="dash-title">WORKOUT<br><span>PLANNER</span></h1>
+        <p class="workout-subtitle">Select your mode, goal, and split to generate your plan.</p>
+    </div>
+
+    <!-- STEP 1: MODE -->
+    <div class="step-block" id="step-mode">
+        <p class="step-label">Step 1 — Choose Your Mode</p>
+        <div class="option-grid">
+            <div class="option-card" data-mode="home" onclick="selectMode('home')">
+                <span class="option-icon">🏃</span>
+                <h3>Home / Cardio</h3>
+                <p>Bodyweight training, cardio, and flexibility — no equipment needed.</p>
+            </div>
+            <div class="option-card" data-mode="gym" onclick="selectMode('gym')">
+                <span class="option-icon">🏋️</span>
+                <h3>Gym Workout</h3>
+                <p>Classic gym splits with weights, machines, and structured programming.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 2: GOAL -->
+    <div class="step-block hidden" id="step-goal">
+        <p class="step-label">Step 2 — Choose Your Goal</p>
+        <div class="option-grid" id="goal-options"></div>
+    </div>
+
+    <!-- STEP 3: SPLIT (gym only) -->
+    <div class="step-block hidden" id="step-split">
+        <p class="step-label">Step 3 — Choose Your Split</p>
+        <div class="option-grid">
+            <div class="option-card" data-split="bro" onclick="selectSplit('bro')">
+                <span class="option-icon">💪</span>
+                <h3>Bro Split</h3>
+                <p>1 day, 1 muscle group. Chest / Back / Shoulders / Arms / Legs.</p>
+                <span class="badge">5 days/week</span>
+            </div>
+            <div class="option-card" data-split="ppl" onclick="selectSplit('ppl')">
+                <span class="option-icon">🔄</span>
+                <h3>Push Pull Legs</h3>
+                <p>Push / Pull / Legs rotating split. Efficient and proven.</p>
+                <span class="badge">6 days/week</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 4: PLAN OUTPUT -->
+    <div class="step-block hidden" id="step-plan">
+        <p class="step-label">Step 4 — Your Plan</p>
+        <div id="plan-output"></div>
+    </div>
+
+    <!-- WARM UP / COOL DOWN (always at bottom once plan shows) -->
+    <div class="step-block hidden" id="step-warmup">
+        <div class="warmup-grid">
+            <div class="warmup-card">
+                <h3>🔥 Warm Up <span>(5–10 min)</span></h3>
+                <ul>
+                    <li>Jumping Jacks — 2 min</li>
+                    <li>Arm Circles — 1 min</li>
+                    <li>Hip Rotations — 1 min</li>
+                    <li>Leg Swings — 1 min</li>
+                    <li>Light Jog in Place — 2 min</li>
+                </ul>
+            </div>
+            <div class="warmup-card">
+                <h3>❄️ Cool Down <span>(5–10 min)</span></h3>
+                <ul>
+                    <li>Standing Quad Stretch — 1 min</li>
+                    <li>Hamstring Stretch — 1 min</li>
+                    <li>Shoulder Cross Stretch — 1 min</li>
+                    <li>Child's Pose — 2 min</li>
+                    <li>Deep Breathing — 2 min</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+<script>
+// ── Data ────────────────────────────────────────────────────────────────────
+
+const gymGoals = [
+    { id: 'bulk',        icon: '📈', label: 'Bulk',        desc: 'Build maximum muscle. Caloric surplus, heavy compound lifts.' },
+    { id: 'lean',        icon: '🔥', label: 'Lean / Cut',  desc: 'Lose fat while maintaining muscle. Deficit + high volume.' },
+    { id: 'maintenance', icon: '⚖️', label: 'Maintenance', desc: 'Stay where you are. Balanced training and nutrition.' },
+];
+
+const homeGoals = [
+    { id: 'weightloss',  icon: '🏃', label: 'Weight Loss',  desc: 'Burn calories with high intensity cardio circuits.' },
+    { id: 'endurance',   icon: '💨', label: 'Endurance',    desc: 'Build stamina with longer, moderate intensity sessions.' },
+    { id: 'flexibility', icon: '🧘', label: 'Flexibility',  desc: 'Improve mobility and reduce injury risk with yoga and stretching.' },
+];
+
+const plans = {
+    gym: {
+        bulk: {
+            bro: [
+                { day: 'Monday',    focus: 'Chest',     exercises: [
+                    { name: 'Barbell Bench Press',     sets: '4', reps: '6–8',   rest: '3 min' },
+                    { name: 'Incline Dumbbell Press',  sets: '3', reps: '8–10',  rest: '2 min' },
+                    { name: 'Cable Flyes',             sets: '3', reps: '12',    rest: '90 sec' },
+                    { name: 'Dips (weighted)',         sets: '3', reps: '8–10',  rest: '2 min' },
+                    { name: 'Push-ups (burnout)',      sets: '1', reps: 'Failure', rest: '—' },
+                ]},
+                { day: 'Tuesday',   focus: 'Back',      exercises: [
+                    { name: 'Deadlift',                sets: '4', reps: '5',     rest: '3 min' },
+                    { name: 'Barbell Row',             sets: '4', reps: '6–8',   rest: '2 min' },
+                    { name: 'Pull-ups (weighted)',     sets: '3', reps: '6–8',   rest: '2 min' },
+                    { name: 'Lat Pulldown',            sets: '3', reps: '10–12', rest: '90 sec' },
+                    { name: 'Seated Cable Row',        sets: '3', reps: '10–12', rest: '90 sec' },
+                ]},
+                { day: 'Wednesday', focus: 'Shoulders', exercises: [
+                    { name: 'Overhead Press (BB)',     sets: '4', reps: '6–8',   rest: '3 min' },
+                    { name: 'Arnold Press',            sets: '3', reps: '10',    rest: '2 min' },
+                    { name: 'Lateral Raises',          sets: '4', reps: '12–15', rest: '60 sec' },
+                    { name: 'Face Pulls',              sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'Shrugs',                  sets: '3', reps: '12',    rest: '90 sec' },
+                ]},
+                { day: 'Thursday',  focus: 'Arms',      exercises: [
+                    { name: 'Barbell Curl',            sets: '4', reps: '8–10',  rest: '90 sec' },
+                    { name: 'Incline Dumbbell Curl',   sets: '3', reps: '10–12', rest: '60 sec' },
+                    { name: 'Hammer Curl',             sets: '3', reps: '12',    rest: '60 sec' },
+                    { name: 'Close-Grip Bench Press',  sets: '4', reps: '8–10',  rest: '90 sec' },
+                    { name: 'Skull Crushers',          sets: '3', reps: '10–12', rest: '60 sec' },
+                    { name: 'Tricep Pushdown',         sets: '3', reps: '12–15', rest: '60 sec' },
+                ]},
+                { day: 'Friday',    focus: 'Legs',      exercises: [
+                    { name: 'Barbell Squat',           sets: '4', reps: '6–8',   rest: '3 min' },
+                    { name: 'Romanian Deadlift',       sets: '3', reps: '8–10',  rest: '2 min' },
+                    { name: 'Leg Press',               sets: '3', reps: '10–12', rest: '2 min' },
+                    { name: 'Leg Curl',                sets: '3', reps: '12',    rest: '90 sec' },
+                    { name: 'Calf Raises',             sets: '4', reps: '15–20', rest: '60 sec' },
+                ]},
+                { day: 'Saturday',  focus: 'Rest',      exercises: [] },
+                { day: 'Sunday',    focus: 'Rest',      exercises: [] },
+            ],
+            ppl: [
+                { day: 'Monday',    focus: 'Push',      exercises: [
+                    { name: 'Barbell Bench Press',     sets: '4', reps: '6–8',   rest: '3 min' },
+                    { name: 'Overhead Press',          sets: '3', reps: '8',     rest: '2 min' },
+                    { name: 'Incline DB Press',        sets: '3', reps: '10',    rest: '2 min' },
+                    { name: 'Lateral Raises',          sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'Tricep Pushdown',         sets: '3', reps: '12',    rest: '60 sec' },
+                ]},
+                { day: 'Tuesday',   focus: 'Pull',      exercises: [
+                    { name: 'Deadlift',                sets: '4', reps: '5',     rest: '3 min' },
+                    { name: 'Pull-ups',                sets: '3', reps: '8–10',  rest: '2 min' },
+                    { name: 'Barbell Row',             sets: '3', reps: '8',     rest: '2 min' },
+                    { name: 'Face Pulls',              sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'Barbell Curl',            sets: '3', reps: '10',    rest: '60 sec' },
+                ]},
+                { day: 'Wednesday', focus: 'Legs',      exercises: [
+                    { name: 'Barbell Squat',           sets: '4', reps: '6–8',   rest: '3 min' },
+                    { name: 'Romanian Deadlift',       sets: '3', reps: '8–10',  rest: '2 min' },
+                    { name: 'Leg Press',               sets: '3', reps: '12',    rest: '2 min' },
+                    { name: 'Leg Curl',                sets: '3', reps: '12',    rest: '90 sec' },
+                    { name: 'Calf Raises',             sets: '4', reps: '20',    rest: '60 sec' },
+                ]},
+                { day: 'Thursday',  focus: 'Push',      exercises: [
+                    { name: 'Overhead Press',          sets: '4', reps: '6–8',   rest: '3 min' },
+                    { name: 'Incline Bench Press',     sets: '3', reps: '10',    rest: '2 min' },
+                    { name: 'Cable Flyes',             sets: '3', reps: '12',    rest: '90 sec' },
+                    { name: 'Lateral Raises',          sets: '4', reps: '15',    rest: '60 sec' },
+                    { name: 'Skull Crushers',          sets: '3', reps: '10–12', rest: '60 sec' },
+                ]},
+                { day: 'Friday',    focus: 'Pull',      exercises: [
+                    { name: 'Weighted Pull-ups',       sets: '4', reps: '6–8',   rest: '2 min' },
+                    { name: 'Seated Cable Row',        sets: '3', reps: '10–12', rest: '90 sec' },
+                    { name: 'Lat Pulldown',            sets: '3', reps: '12',    rest: '90 sec' },
+                    { name: 'Hammer Curl',             sets: '3', reps: '12',    rest: '60 sec' },
+                    { name: 'Incline DB Curl',         sets: '3', reps: '12',    rest: '60 sec' },
+                ]},
+                { day: 'Saturday',  focus: 'Legs',      exercises: [
+                    { name: 'Front Squat',             sets: '4', reps: '6–8',   rest: '3 min' },
+                    { name: 'Walking Lunges',          sets: '3', reps: '12/leg', rest: '2 min' },
+                    { name: 'Leg Extension',           sets: '3', reps: '15',    rest: '90 sec' },
+                    { name: 'Leg Curl',                sets: '3', reps: '12',    rest: '90 sec' },
+                    { name: 'Calf Raises',             sets: '4', reps: '20',    rest: '60 sec' },
+                ]},
+                { day: 'Sunday',    focus: 'Rest',      exercises: [] },
+            ],
+        },
+        lean: {
+            bro: [
+                { day: 'Monday',    focus: 'Chest',     exercises: [
+                    { name: 'Incline Bench Press',     sets: '4', reps: '10–12', rest: '90 sec' },
+                    { name: 'Cable Flyes',             sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'Push-ups (wide)',         sets: '3', reps: '15–20', rest: '60 sec' },
+                    { name: 'Decline DB Press',        sets: '3', reps: '12',    rest: '90 sec' },
+                ]},
+                { day: 'Tuesday',   focus: 'Back',      exercises: [
+                    { name: 'Pull-ups',                sets: '4', reps: '10–12', rest: '90 sec' },
+                    { name: 'Lat Pulldown',            sets: '3', reps: '12–15', rest: '60 sec' },
+                    { name: 'Seated Row',              sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'Dumbbell Row',            sets: '3', reps: '12/side', rest: '60 sec' },
+                ]},
+                { day: 'Wednesday', focus: 'Shoulders', exercises: [
+                    { name: 'DB Shoulder Press',       sets: '4', reps: '12',    rest: '90 sec' },
+                    { name: 'Lateral Raises',          sets: '4', reps: '15–20', rest: '45 sec' },
+                    { name: 'Front Raises',            sets: '3', reps: '15',    rest: '45 sec' },
+                    { name: 'Face Pulls',              sets: '3', reps: '20',    rest: '45 sec' },
+                ]},
+                { day: 'Thursday',  focus: 'Arms',      exercises: [
+                    { name: 'DB Curl',                 sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'Hammer Curl',             sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'Tricep Pushdown',         sets: '3', reps: '15–20', rest: '60 sec' },
+                    { name: 'Overhead Tricep Ext.',    sets: '3', reps: '15',    rest: '60 sec' },
+                ]},
+                { day: 'Friday',    focus: 'Legs',      exercises: [
+                    { name: 'Goblet Squat',            sets: '4', reps: '15',    rest: '90 sec' },
+                    { name: 'Walking Lunges',          sets: '3', reps: '12/leg', rest: '90 sec' },
+                    { name: 'Leg Press',               sets: '3', reps: '15',    rest: '90 sec' },
+                    { name: 'Leg Curl',                sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'Calf Raises',             sets: '4', reps: '20',    rest: '45 sec' },
+                ]},
+                { day: 'Saturday',  focus: 'Cardio',    exercises: [
+                    { name: 'Treadmill / Cycling',     sets: '1', reps: '30 min', rest: '—' },
+                    { name: 'Jump Rope',               sets: '3', reps: '5 min',  rest: '2 min' },
+                ]},
+                { day: 'Sunday',    focus: 'Rest',      exercises: [] },
+            ],
+            ppl: [
+                { day: 'Monday',    focus: 'Push',      exercises: [
+                    { name: 'DB Bench Press',          sets: '4', reps: '12',    rest: '90 sec' },
+                    { name: 'Overhead Press',          sets: '3', reps: '12',    rest: '90 sec' },
+                    { name: 'Lateral Raises',          sets: '4', reps: '15–20', rest: '45 sec' },
+                    { name: 'Tricep Pushdown',         sets: '3', reps: '15',    rest: '60 sec' },
+                ]},
+                { day: 'Tuesday',   focus: 'Pull',      exercises: [
+                    { name: 'Pull-ups',                sets: '4', reps: '10–12', rest: '90 sec' },
+                    { name: 'Seated Row',              sets: '3', reps: '12–15', rest: '60 sec' },
+                    { name: 'Face Pulls',              sets: '3', reps: '20',    rest: '45 sec' },
+                    { name: 'DB Curl',                 sets: '3', reps: '15',    rest: '60 sec' },
+                ]},
+                { day: 'Wednesday', focus: 'Legs',      exercises: [
+                    { name: 'Squat',                   sets: '4', reps: '12–15', rest: '2 min' },
+                    { name: 'Romanian Deadlift',       sets: '3', reps: '12',    rest: '90 sec' },
+                    { name: 'Leg Press',               sets: '3', reps: '15',    rest: '90 sec' },
+                    { name: 'Calf Raises',             sets: '4', reps: '20',    rest: '45 sec' },
+                ]},
+                { day: 'Thursday',  focus: 'Push',      exercises: [
+                    { name: 'Incline DB Press',        sets: '4', reps: '12',    rest: '90 sec' },
+                    { name: 'Cable Flyes',             sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'Lateral Raises',          sets: '4', reps: '15',    rest: '45 sec' },
+                    { name: 'Skull Crushers',          sets: '3', reps: '12',    rest: '60 sec' },
+                ]},
+                { day: 'Friday',    focus: 'Pull',      exercises: [
+                    { name: 'Lat Pulldown',            sets: '4', reps: '12–15', rest: '60 sec' },
+                    { name: 'DB Row',                  sets: '3', reps: '12/side', rest: '60 sec' },
+                    { name: 'Hammer Curl',             sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'Face Pulls',              sets: '3', reps: '20',    rest: '45 sec' },
+                ]},
+                { day: 'Saturday',  focus: 'Legs + Cardio', exercises: [
+                    { name: 'Walking Lunges',          sets: '3', reps: '15/leg', rest: '90 sec' },
+                    { name: 'Leg Curl',                sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'Treadmill',               sets: '1', reps: '20 min', rest: '—' },
+                ]},
+                { day: 'Sunday',    focus: 'Rest',      exercises: [] },
+            ],
+        },
+        maintenance: {
+            bro: [
+                { day: 'Monday',    focus: 'Chest',     exercises: [
+                    { name: 'Bench Press',             sets: '3', reps: '10',    rest: '2 min' },
+                    { name: 'Incline DB Press',        sets: '3', reps: '10–12', rest: '90 sec' },
+                    { name: 'Cable Flyes',             sets: '3', reps: '12–15', rest: '60 sec' },
+                ]},
+                { day: 'Tuesday',   focus: 'Back',      exercises: [
+                    { name: 'Pull-ups',                sets: '3', reps: '10',    rest: '90 sec' },
+                    { name: 'Barbell Row',             sets: '3', reps: '10',    rest: '90 sec' },
+                    { name: 'Lat Pulldown',            sets: '3', reps: '12',    rest: '60 sec' },
+                ]},
+                { day: 'Wednesday', focus: 'Rest',      exercises: [] },
+                { day: 'Thursday',  focus: 'Shoulders + Arms', exercises: [
+                    { name: 'Overhead Press',          sets: '3', reps: '10',    rest: '90 sec' },
+                    { name: 'Lateral Raises',          sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'Barbell Curl',            sets: '3', reps: '10',    rest: '60 sec' },
+                    { name: 'Tricep Pushdown',         sets: '3', reps: '12',    rest: '60 sec' },
+                ]},
+                { day: 'Friday',    focus: 'Legs',      exercises: [
+                    { name: 'Squat',                   sets: '3', reps: '10',    rest: '2 min' },
+                    { name: 'Leg Press',               sets: '3', reps: '12',    rest: '90 sec' },
+                    { name: 'Leg Curl',                sets: '3', reps: '12',    rest: '60 sec' },
+                    { name: 'Calf Raises',             sets: '3', reps: '15',    rest: '60 sec' },
+                ]},
+                { day: 'Saturday',  focus: 'Rest',      exercises: [] },
+                { day: 'Sunday',    focus: 'Rest',      exercises: [] },
+            ],
+            ppl: [
+                { day: 'Monday',    focus: 'Push',      exercises: [
+                    { name: 'Bench Press',             sets: '3', reps: '10',    rest: '2 min' },
+                    { name: 'Overhead Press',          sets: '3', reps: '10',    rest: '90 sec' },
+                    { name: 'Lateral Raises',          sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'Tricep Pushdown',         sets: '3', reps: '12',    rest: '60 sec' },
+                ]},
+                { day: 'Tuesday',   focus: 'Pull',      exercises: [
+                    { name: 'Pull-ups',                sets: '3', reps: '10',    rest: '90 sec' },
+                    { name: 'Barbell Row',             sets: '3', reps: '10',    rest: '90 sec' },
+                    { name: 'Face Pulls',              sets: '3', reps: '15',    rest: '60 sec' },
+                    { name: 'DB Curl',                 sets: '3', reps: '12',    rest: '60 sec' },
+                ]},
+                { day: 'Wednesday', focus: 'Legs',      exercises: [
+                    { name: 'Squat',                   sets: '3', reps: '10',    rest: '2 min' },
+                    { name: 'Romanian Deadlift',       sets: '3', reps: '10',    rest: '90 sec' },
+                    { name: 'Leg Press',               sets: '3', reps: '12',    rest: '90 sec' },
+                    { name: 'Calf Raises',             sets: '3', reps: '15',    rest: '60 sec' },
+                ]},
+                { day: 'Thursday',  focus: 'Rest',      exercises: [] },
+                { day: 'Friday',    focus: 'Push',      exercises: [
+                    { name: 'Incline DB Press',        sets: '3', reps: '10–12', rest: '90 sec' },
+                    { name: 'Cable Flyes',             sets: '3', reps: '12',    rest: '60 sec' },
+                    { name: 'Lateral Raises',          sets: '3', reps: '15',    rest: '60 sec' },
+                ]},
+                { day: 'Saturday',  focus: 'Pull + Legs', exercises: [
+                    { name: 'Lat Pulldown',            sets: '3', reps: '12',    rest: '60 sec' },
+                    { name: 'Seated Row',              sets: '3', reps: '12',    rest: '60 sec' },
+                    { name: 'Walking Lunges',          sets: '3', reps: '12/leg', rest: '90 sec' },
+                ]},
+                { day: 'Sunday',    focus: 'Rest',      exercises: [] },
+            ],
+        },
+    },
+    home: {
+        weightloss: [
+            { day: 'Monday',    focus: 'HIIT Cardio',   exercises: [
+                { name: 'Jumping Jacks',               sets: '4', reps: '30 sec', rest: '15 sec' },
+                { name: 'Burpees',                     sets: '4', reps: '10',     rest: '30 sec' },
+                { name: 'High Knees',                  sets: '4', reps: '30 sec', rest: '15 sec' },
+                { name: 'Mountain Climbers',           sets: '4', reps: '30 sec', rest: '15 sec' },
+            ]},
+            { day: 'Tuesday',   focus: 'Bodyweight Strength', exercises: [
+                { name: 'Push-ups',                    sets: '3', reps: '15–20',  rest: '60 sec' },
+                { name: 'Squats',                      sets: '3', reps: '20',     rest: '60 sec' },
+                { name: 'Plank',                       sets: '3', reps: '45 sec', rest: '30 sec' },
+                { name: 'Glute Bridge',                sets: '3', reps: '20',     rest: '45 sec' },
+            ]},
+            { day: 'Wednesday', focus: 'Active Rest',   exercises: [
+                { name: 'Brisk Walk',                  sets: '1', reps: '30 min', rest: '—' },
+            ]},
+            { day: 'Thursday',  focus: 'HIIT Cardio',   exercises: [
+                { name: 'Jump Rope',                   sets: '5', reps: '1 min',  rest: '30 sec' },
+                { name: 'Squat Jumps',                 sets: '4', reps: '15',     rest: '30 sec' },
+                { name: 'Lateral Shuffles',            sets: '4', reps: '30 sec', rest: '15 sec' },
+            ]},
+            { day: 'Friday',    focus: 'Full Body',     exercises: [
+                { name: 'Push-ups',                    sets: '3', reps: '20',     rest: '60 sec' },
+                { name: 'Lunges',                      sets: '3', reps: '15/leg', rest: '60 sec' },
+                { name: 'Crunches',                    sets: '3', reps: '25',     rest: '45 sec' },
+                { name: 'Burpees',                     sets: '3', reps: '10',     rest: '60 sec' },
+            ]},
+            { day: 'Saturday',  focus: 'Cardio',        exercises: [
+                { name: 'Jog / Cycle',                 sets: '1', reps: '40 min', rest: '—' },
+            ]},
+            { day: 'Sunday',    focus: 'Rest',          exercises: [] },
+        ],
+        endurance: [
+            { day: 'Monday',    focus: 'Steady Cardio', exercises: [
+                { name: 'Jog',                         sets: '1', reps: '30 min', rest: '—' },
+            ]},
+            { day: 'Tuesday',   focus: 'Bodyweight Circuit', exercises: [
+                { name: 'Push-ups',                    sets: '4', reps: '15',     rest: '45 sec' },
+                { name: 'Squats',                      sets: '4', reps: '20',     rest: '45 sec' },
+                { name: 'Mountain Climbers',           sets: '4', reps: '30 sec', rest: '30 sec' },
+            ]},
+            { day: 'Wednesday', focus: 'Rest',          exercises: [] },
+            { day: 'Thursday',  focus: 'Interval Run',  exercises: [
+                { name: 'Sprint 30 sec / Walk 1 min',  sets: '8', reps: '1 round', rest: '—' },
+            ]},
+            { day: 'Friday',    focus: 'Full Body',     exercises: [
+                { name: 'Burpees',                     sets: '3', reps: '12',     rest: '60 sec' },
+                { name: 'Plank',                       sets: '3', reps: '1 min',  rest: '30 sec' },
+                { name: 'Lunges',                      sets: '3', reps: '15/leg', rest: '60 sec' },
+            ]},
+            { day: 'Saturday',  focus: 'Long Run',      exercises: [
+                { name: 'Jog / Walk',                  sets: '1', reps: '45 min', rest: '—' },
+            ]},
+            { day: 'Sunday',    focus: 'Rest',          exercises: [] },
+        ],
+        flexibility: [
+            { day: 'Monday',    focus: 'Yoga Flow',     exercises: [
+                { name: 'Sun Salutation',              sets: '3', reps: '5 rounds', rest: '30 sec' },
+                { name: 'Warrior I & II',              sets: '2', reps: '1 min/side', rest: '30 sec' },
+                { name: "Child's Pose",                sets: '1', reps: '2 min',  rest: '—' },
+            ]},
+            { day: 'Tuesday',   focus: 'Mobility',      exercises: [
+                { name: 'Hip Circles',                 sets: '2', reps: '10/side', rest: '30 sec' },
+                { name: 'Thoracic Rotation',           sets: '2', reps: '10/side', rest: '30 sec' },
+                { name: 'Pigeon Pose',                 sets: '2', reps: '90 sec/side', rest: '—' },
+            ]},
+            { day: 'Wednesday', focus: 'Rest',          exercises: [] },
+            { day: 'Thursday',  focus: 'Deep Stretch',  exercises: [
+                { name: 'Forward Fold',                sets: '3', reps: '1 min',  rest: '30 sec' },
+                { name: 'Seated Hamstring Stretch',    sets: '3', reps: '1 min/side', rest: '—' },
+                { name: 'Butterfly Stretch',           sets: '3', reps: '1 min',  rest: '—' },
+            ]},
+            { day: 'Friday',    focus: 'Yoga Flow',     exercises: [
+                { name: 'Sun Salutation',              sets: '4', reps: '5 rounds', rest: '30 sec' },
+                { name: 'Downward Dog',                sets: '3', reps: '1 min',  rest: '30 sec' },
+                { name: 'Cobra Pose',                  sets: '3', reps: '45 sec', rest: '—' },
+            ]},
+            { day: 'Saturday',  focus: 'Full Body Stretch', exercises: [
+                { name: 'Full Body Stretch Routine',   sets: '1', reps: '30 min', rest: '—' },
+            ]},
+            { day: 'Sunday',    focus: 'Rest',          exercises: [] },
+        ],
+    },
+};
+
+// ── State ───────────────────────────────────────────────────────────────────
+let currentMode = null;
+let currentGoal = null;
+let currentSplit = null;
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function show(id)   { document.getElementById(id).classList.remove('hidden'); }
+function hide(id)   { document.getElementById(id).classList.add('hidden'); }
+function scrollTo(id) {
+    setTimeout(() => document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function clearActive(selector) {
+    document.querySelectorAll(selector).forEach(el => el.classList.remove('active'));
+}
+
+// ── Step handlers ────────────────────────────────────────────────────────────
+function selectMode(mode) {
+    currentMode = mode;
+    currentGoal = null;
+    currentSplit = null;
+
+    clearActive('.option-card');
+    document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+
+    // Build goal options
+    const goals = mode === 'gym' ? gymGoals : homeGoals;
+    const container = document.getElementById('goal-options');
+    container.innerHTML = goals.map(g => `
+        <div class="option-card" data-goal="${g.id}" onclick="selectGoal('${g.id}')">
+            <span class="option-icon">${g.icon}</span>
+            <h3>${g.label}</h3>
+            <p>${g.desc}</p>
+        </div>
+    `).join('');
+
+    hide('step-split');
+    hide('step-plan');
+    hide('step-warmup');
+    show('step-goal');
+    scrollTo('step-goal');
+}
+
+function selectGoal(goal) {
+    currentGoal = goal;
+    currentSplit = null;
+
+    clearActive('[data-goal]');
+    document.querySelector(`[data-goal="${goal}"]`).classList.add('active');
+
+    if (currentMode === 'gym') {
+        hide('step-plan');
+        hide('step-warmup');
+        show('step-split');
+        scrollTo('step-split');
+    } else {
+        renderPlan();
+    }
+}
+
+function selectSplit(split) {
+    currentSplit = split;
+    clearActive('[data-split]');
+    document.querySelector(`[data-split="${split}"]`).classList.add('active');
+    renderPlan();
+}
+
+function renderPlan() {
+    let schedule;
+    if (currentMode === 'gym') {
+        schedule = plans.gym[currentGoal][currentSplit];
+    } else {
+        schedule = plans.home[currentGoal];
+    }
+
+    const output = document.getElementById('plan-output');
+    output.innerHTML = schedule.map(day => {
+        const isRest = day.focus === 'Rest';
+        return `
+        <div class="day-block ${isRest ? 'day-block--rest' : ''}">
+            <div class="day-header">
+                <span class="day-name">${day.day}</span>
+                <span class="day-focus">${day.focus}</span>
+            </div>
+            ${isRest ? '<p class="rest-msg">Rest & recover. Sleep well, eat right. 💤</p>' : `
+            <table class="exercise-table">
+                <thead>
+                    <tr><th>Exercise</th><th>Sets</th><th>Reps</th><th>Rest</th></tr>
+                </thead>
+                <tbody>
+                    ${day.exercises.map(ex => `
+                        <tr>
+                            <td>${ex.name}</td>
+                            <td>${ex.sets}</td>
+                            <td>${ex.reps}</td>
+                            <td>${ex.rest}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`}
+        </div>`;
+    }).join('');
+
+    show('step-plan');
+    show('step-warmup');
+    scrollTo('step-plan');
+}
+</script>
+{% endblock %}
