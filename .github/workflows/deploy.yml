@@ -31,7 +31,7 @@ jobs:
           docker push 168377602714.dkr.ecr.ap-south-1.amazonaws.com/const-app:latest
 
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@v0.1.10
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
